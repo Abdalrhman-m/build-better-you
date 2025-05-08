@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RegisterFormProps {
   onToggleForm: () => void;
@@ -15,33 +14,11 @@ const RegisterForm = ({ onToggleForm }: RegisterFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const { register, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // TODO: Replace with actual API call when backend is ready
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Account created!",
-        description: "Welcome to Habit Builder. Let's get started!",
-      });
-      navigate('/dashboard');
-    } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: "There was an error creating your account.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await register({ name, email, password });
   };
 
   return (
