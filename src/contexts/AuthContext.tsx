@@ -57,7 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (credentials: LoginRequest): Promise<boolean> => {
     setIsLoading(true);
     try {
+      console.log("Logging in with:", credentials);
       const response = await authService.login(credentials);
+      console.log("Login response:", response);
       
       if (response.isSuccess && response.value) {
         setUser(response.value);
@@ -68,17 +70,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigate('/dashboard');
         return true;
       } else {
+        const errorMessage = response.errors && response.errors.length > 0 
+          ? response.errors[0] 
+          : "Please check your credentials and try again.";
+        
         toast({
           title: "Login failed",
-          description: response.errors?.[0] || "Please check your credentials and try again.",
+          description: errorMessage,
           variant: "destructive",
         });
+        console.error("Login failed:", errorMessage);
         return false;
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: "An unexpected error occurred.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -90,7 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: RegisterRequest): Promise<boolean> => {
     setIsLoading(true);
     try {
+      console.log("Registering with:", userData);
       const response = await authService.register(userData);
+      console.log("Register response:", response);
       
       if (response.isSuccess && response.value) {
         setUser(response.value);
@@ -101,17 +111,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigate('/dashboard');
         return true;
       } else {
+        const errorMessage = response.errors && response.errors.length > 0 
+          ? response.errors[0] 
+          : "There was an error creating your account.";
+          
         toast({
           title: "Registration failed",
-          description: response.errors?.[0] || "There was an error creating your account.",
+          description: errorMessage,
           variant: "destructive",
         });
+        console.error("Registration failed:", errorMessage);
         return false;
       }
     } catch (error) {
+      console.error("Registration error:", error);
       toast({
         title: "Registration failed",
-        description: "An unexpected error occurred.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       return false;

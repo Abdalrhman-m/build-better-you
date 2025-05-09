@@ -14,11 +14,45 @@ const RegisterForm = ({ onToggleForm }: RegisterFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState('');
   const { register, isLoading } = useAuth();
+
+  const validateForm = () => {
+    if (!name.trim()) {
+      setFormError('Name is required');
+      return false;
+    }
+    
+    if (!email.trim()) {
+      setFormError('Email is required');
+      return false;
+    }
+    
+    if (!password || password.length < 6) {
+      setFormError('Password must be at least 6 characters');
+      return false;
+    }
+    
+    setFormError('');
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await register({ name, email, password });
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      const success = await register({ name, email, password });
+      if (!success) {
+        setFormError('Registration failed. Please try again with different information.');
+      }
+    } catch (error) {
+      console.error('Registration submission error:', error);
+      setFormError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -31,6 +65,11 @@ const RegisterForm = ({ onToggleForm }: RegisterFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+              {formError}
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input

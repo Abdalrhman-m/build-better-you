@@ -13,11 +13,40 @@ interface LoginFormProps {
 const LoginForm = ({ onToggleForm }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState('');
   const { login, isLoading } = useAuth();
+
+  const validateForm = () => {
+    if (!email.trim()) {
+      setFormError('Email is required');
+      return false;
+    }
+    
+    if (!password) {
+      setFormError('Password is required');
+      return false;
+    }
+    
+    setFormError('');
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login({ email, password });
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      const success = await login({ email, password });
+      if (!success) {
+        setFormError('Login failed. Please check your credentials and try again.');
+      }
+    } catch (error) {
+      console.error('Login submission error:', error);
+      setFormError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -30,6 +59,11 @@ const LoginForm = ({ onToggleForm }: LoginFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+              {formError}
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
