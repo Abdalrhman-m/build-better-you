@@ -144,7 +144,7 @@ export const profileService = {
       const userId = session.session.user.id;
       const fileExtension = file.name.split('.').pop();
       const fileName = `${userId}-${Date.now()}.${fileExtension}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')

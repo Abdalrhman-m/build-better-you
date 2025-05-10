@@ -1,4 +1,3 @@
-
 // Response wrapper based on Ardalis.Result pattern
 export interface ApiResponse<T> {
   isSuccess: boolean;
@@ -39,8 +38,8 @@ export interface AuthResponse {
 // Profile models
 export interface UserProfile {
   id: string;
-  username: string;
-  avatar_url?: string;
+  username: string | null;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 }
