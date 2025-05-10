@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest } from '@/types/api';
 
@@ -132,6 +131,8 @@ export const authService = {
   },
   
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('sb-' + SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token');
+    // Fix: Use the correct approach to check authentication status
+    return !!supabase.auth.getSession() || 
+           !!localStorage.getItem('sb-auth-token');
   }
 };
