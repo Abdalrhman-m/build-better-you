@@ -1,47 +1,43 @@
 
-import { apiService } from './api-client';
+import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest } from '@/types/api';
-
-const AUTH_ENDPOINTS = {
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
-  LOGOUT: '/auth/logout',
-};
-
-// Mock implementation for development
-const mockAuthResponse = (userData: any): ApiResponse<AuthResponse> => {
-  // For development purposes only - simulate successful auth
-  return {
-    isSuccess: true,
-    value: {
-      token: 'mock-jwt-token-' + Math.random().toString(36).substring(2, 15),
-      expiresAt: new Date(Date.now() + 86400000).toISOString(), // 24h from now
-      userId: 'user-' + Math.random().toString(36).substring(2, 10),
-      userName: userData.name || userData.email.split('@')[0]
-    }
-  };
-};
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
     try {
       console.log('Login request:', credentials);
       
-      // In a development environment without a real backend,
-      // we can use a mock response
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Using mock login response');
-        return mockAuthResponse(credentials);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+      
+      if (error) {
+        console.error('Supabase login error:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
       }
       
-      const response = await apiService.post<AuthResponse>(AUTH_ENDPOINTS.LOGIN, credentials);
-      
-      if (response.isSuccess && response.value) {
-        // Save token to local storage
-        localStorage.setItem('auth_token', response.value.token);
+      if (data && data.user) {
+        const authResponse: AuthResponse = {
+          token: data.session?.access_token || '',
+          expiresAt: new Date(data.session?.expires_at || 0).toISOString(),
+          userId: data.user.id,
+          userName: data.user.email?.split('@')[0] || ''
+        };
+        
+        return {
+          isSuccess: true,
+          value: authResponse
+        };
       }
       
-      return response;
+      return {
+        isSuccess: false,
+        errors: ['Unknown error during login']
+      };
     } catch (error) {
       console.error('Login error:', error);
       return {
@@ -55,21 +51,44 @@ export const authService = {
     try {
       console.log('Register request:', userData);
       
-      // In a development environment without a real backend,
-      // we can use a mock response
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Using mock register response');
-        return mockAuthResponse(userData);
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            name: userData.name
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Supabase register error:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
       }
       
-      const response = await apiService.post<AuthResponse>(AUTH_ENDPOINTS.REGISTER, userData);
-      
-      if (response.isSuccess && response.value) {
-        // Save token to local storage
-        localStorage.setItem('auth_token', response.value.token);
+      if (data && data.user) {
+        // With Supabase, the user might need to confirm their email
+        // We'll return success even if confirmation is pending
+        const authResponse: AuthResponse = {
+          token: data.session?.access_token || '',
+          expiresAt: new Date(data.session?.expires_at || 0).toISOString(),
+          userId: data.user.id,
+          userName: userData.name || userData.email.split('@')[0]
+        };
+        
+        return {
+          isSuccess: true,
+          value: authResponse
+        };
       }
       
-      return response;
+      return {
+        isSuccess: false,
+        errors: ['Unknown error during registration']
+      };
     } catch (error) {
       console.error('Register error:', error);
       return {
@@ -81,23 +100,18 @@ export const authService = {
   
   async logout(): Promise<ApiResponse<void>> {
     try {
-      // For development without a real backend
-      if (process.env.NODE_ENV === 'development') {
-        // Just remove the token from localStorage
-        localStorage.removeItem('auth_token');
-        return { isSuccess: true };
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Supabase logout error:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
       }
       
-      const response = await apiService.post<void>(AUTH_ENDPOINTS.LOGOUT);
-      
-      // Remove token regardless of response
-      localStorage.removeItem('auth_token');
-      
-      return response;
+      return { isSuccess: true };
     } catch (error) {
-      // Remove token even if there's an error
-      localStorage.removeItem('auth_token');
-      
       console.error('Logout error:', error);
       return {
         isSuccess: true, // Consider logout successful even if API call fails
@@ -106,7 +120,18 @@ export const authService = {
     }
   },
   
+  async getCurrentSession(): Promise<{ session: any; user: any } | null> {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      return {
+        session: data.session,
+        user: data.session.user
+      };
+    }
+    return null;
+  },
+  
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('auth_token');
+    return !!localStorage.getItem('sb-' + SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token');
   }
 };

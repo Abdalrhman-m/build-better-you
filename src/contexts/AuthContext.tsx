@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/auth-service';
+import { supabase } from '@/integrations/supabase/client';
 import { AuthResponse, LoginRequest, RegisterRequest } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,39 +20,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<AuthResponse | null>(null);
+  const [session, setSession] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Check if user is already authenticated on mount
+  // Initialize auth state from Supabase
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem('auth_token');
+    // Set up the auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setIsLoading(true);
+        console.log('Auth state changed:', event, currentSession);
         
-        if (token) {
-          // Here you would typically validate the token or get user info
-          // For now we'll just set as authenticated if there's a token
-          // In a real app, you would call an endpoint to get user data
-          
-          // Mock user object based on token existence
-          // Replace this with actual API call in the future
-          setUser({
-            token,
-            expiresAt: new Date(Date.now() + 86400000).toISOString(), // 24h from now
-            userId: 'user-id', // This would come from the API
-            userName: 'User' // This would come from the API
-          });
+        // Update session state
+        setSession(currentSession);
+        
+        // If we have a session, format user data
+        if (currentSession?.user) {
+          const userData: AuthResponse = {
+            token: currentSession.access_token,
+            expiresAt: new Date(currentSession.expires_at! * 1000).toISOString(),
+            userId: currentSession.user.id,
+            userName: currentSession.user.email?.split('@')[0] || 'User'
+          };
+          setUser(userData);
+        } else {
+          setUser(null);
         }
-      } catch (error) {
-        console.error('Authentication check failed:', error);
-        localStorage.removeItem('auth_token');
-      } finally {
+        
         setIsLoading(false);
       }
+    );
+    
+    // THEN check for an existing session
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      const { data } = await supabase.auth.getSession();
+      
+      if (data.session?.user) {
+        const userData: AuthResponse = {
+          token: data.session.access_token,
+          expiresAt: new Date(data.session.expires_at! * 1000).toISOString(),
+          userId: data.session.user.id,
+          userName: data.session.user.email?.split('@')[0] || 'User'
+        };
+        setUser(userData);
+        setSession(data.session);
+      }
+      
+      setIsLoading(false);
     };
     
-    checkAuthStatus();
+    initializeAuth();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
   const login = async (credentials: LoginRequest): Promise<boolean> => {
@@ -62,7 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Login response:", response);
       
       if (response.isSuccess && response.value) {
-        setUser(response.value);
         toast({
           title: "Welcome back!",
           description: "You've successfully logged in.",
@@ -103,7 +126,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Register response:", response);
       
       if (response.isSuccess && response.value) {
-        setUser(response.value);
         toast({
           title: "Account created!",
           description: "Welcome to Habit Builder. Let's get started!",
@@ -141,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.logout();
       setUser(null);
+      setSession(null);
       navigate('/');
       toast({
         title: "Logged out",

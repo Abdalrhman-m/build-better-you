@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -12,15 +12,27 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
-  const [isAuthenticated] = useState(true); // This would come from auth context
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
   const handleLogout = () => {
-    // Handle logout logic here
-    navigate('/auth');
+    logout();
+  };
+  
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user || !user.userName) return 'U';
+    
+    const nameParts = user.userName.split(' ');
+    if (nameParts.length === 1) {
+      return user.userName.slice(0, 2).toUpperCase();
+    }
+    
+    return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
   };
   
   return (
@@ -48,7 +60,7 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer">
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
