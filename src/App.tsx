@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
@@ -30,6 +31,11 @@ const App = () => (
             <Route path="/analytics" element={
               <PrivateRoute>
                 <AnalyticsPage />
+              </PrivateRoute>
+            } />
+            <Route path="/profile" element={
+              <PrivateRoute>
+                <ProfilePage />
               </PrivateRoute>
             } />
             <Route path="*" element={<NotFound />} />
