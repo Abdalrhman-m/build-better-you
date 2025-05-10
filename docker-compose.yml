@@ -1,0 +1,16 @@
+
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    # For development, you can mount volumes to see changes without rebuilding
+    # volumes:
+    #   - ./dist:/usr/share/nginx/html
