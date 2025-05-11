@@ -10,7 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
-import { AuthProvider } from "./contexts/AuthContext";
+import { CleanAuthProvider } from "./contexts/CleanAuthContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
 
 const queryClient = new QueryClient();
@@ -18,7 +18,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <AuthProvider>
+      <CleanAuthProvider>
         <TooltipProvider>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -43,7 +43,7 @@ const App = () => (
           <Toaster />
           <Sonner />
         </TooltipProvider>
-      </AuthProvider>
+      </CleanAuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );
