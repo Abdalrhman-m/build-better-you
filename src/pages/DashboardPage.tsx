@@ -4,110 +4,46 @@ import MainLayout from '@/layouts/MainLayout';
 import HabitList from '@/components/habits/HabitList';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import AddHabitDialog from '@/components/habits/AddHabitDialog';
-import { useToast } from '@/hooks/use-toast';
-import { Habit } from '@/types/habit';
+import { useHabits } from '@/hooks/use-habits';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Sample initial habits
-const initialHabits: Habit[] = [
-  {
-    id: '1',
-    name: 'Drink 8 glasses of water',
-    description: 'Stay hydrated throughout the day',
-    streak: 5,
-    category: 'health',
-    completedDates: [
-      '2023-05-04', '2023-05-05', '2023-05-06', '2023-05-07', '2023-05-08',
-      // Get today's date in YYYY-MM-DD format
-      new Date().toISOString().split('T')[0],
-    ],
-  },
-  {
-    id: '2',
-    name: 'Read for 30 minutes',
-    description: 'Read non-fiction books to learn new things',
-    streak: 3,
-    category: 'learning',
-    completedDates: [
-      '2023-05-06', '2023-05-07', '2023-05-08',
-    ],
-  },
-  {
-    id: '3',
-    name: 'Meditate for 10 minutes',
-    description: 'Practice mindfulness to reduce stress',
-    streak: 0,
-    category: 'mindfulness',
-    completedDates: [],
-  },
-];
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DashboardPage = () => {
-  const [habits, setHabits] = useState<Habit[]>(initialHabits);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { toast } = useToast();
+  const {
+    habits,
+    getHabitsByCategory,
+    isLoading,
+    createHabit,
+    completeHabit,
+    totalHabits,
+    completedToday,
+    currentStreak
+  } = useHabits();
   
   const handleAddHabit = ({ name, description, category }: { name: string, description: string, category: string }) => {
-    const newHabit: Habit = {
-      id: `habit-${Date.now()}`,
-      name,
-      description,
-      streak: 0,
-      category,
-      completedDates: [],
-    };
-    
-    setHabits([...habits, newHabit]);
-  };
-  
-  const handleCompleteHabit = (id: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    setHabits(habits.map(habit => {
-      if (habit.id === id) {
-        const isAlreadyCompleted = habit.completedDates.includes(today);
-        
-        if (isAlreadyCompleted) return habit;
-        
-        // Check if yesterday was completed to increment streak
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayFormatted = yesterday.toISOString().split('T')[0];
-        
-        const isYesterdayCompleted = habit.completedDates.includes(yesterdayFormatted);
-        const newStreak = isYesterdayCompleted ? habit.streak + 1 : 1;
-        
-        toast({
-          title: "Habit completed!",
-          description: `You've completed "${habit.name}" today.`,
-        });
-        
-        return {
-          ...habit,
-          completedDates: [...habit.completedDates, today],
-          streak: newStreak,
-        };
-      }
-      return habit;
-    }));
+    createHabit({ name, description, category });
+    setIsDialogOpen(false);
   };
   
   // Filter habits by category for tabs
-  const healthHabits = habits.filter(h => h.category === 'health');
-  const productivityHabits = habits.filter(h => h.category === 'productivity');
-  const mindfulnessHabits = habits.filter(h => h.category === 'mindfulness');
-  const learningHabits = habits.filter(h => h.category === 'learning');
-  const socialHabits = habits.filter(h => h.category === 'social');
+  const healthHabits = getHabitsByCategory('health');
+  const productivityHabits = getHabitsByCategory('productivity');
+  const mindfulnessHabits = getHabitsByCategory('mindfulness');
+  const learningHabits = getHabitsByCategory('learning');
+  const socialHabits = getHabitsByCategory('social');
   const otherHabits = habits.filter(h => !['health', 'productivity', 'mindfulness', 'learning', 'social'].includes(h.category));
-  
-  // Calculate metrics
-  const totalHabits = habits.length;
-  const completedToday = habits.filter(
-    h => h.completedDates.includes(new Date().toISOString().split('T')[0])
-  ).length;
-  
-  // Get the highest streak
-  const currentStreak = habits.reduce((max, habit) => Math.max(max, habit.streak), 0);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </MainLayout>
+    );
+  }
   
   return (
     <MainLayout>
@@ -120,35 +56,35 @@ const DashboardPage = () => {
       
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="mb-6 overflow-auto">
-          <TabsTrigger value="all">All Habits</TabsTrigger>
-          {healthHabits.length > 0 && <TabsTrigger value="health">Health</TabsTrigger>}
-          {productivityHabits.length > 0 && <TabsTrigger value="productivity">Productivity</TabsTrigger>}
-          {mindfulnessHabits.length > 0 && <TabsTrigger value="mindfulness">Mindfulness</TabsTrigger>}
-          {learningHabits.length > 0 && <TabsTrigger value="learning">Learning</TabsTrigger>}
-          {socialHabits.length > 0 && <TabsTrigger value="social">Social</TabsTrigger>}
-          {otherHabits.length > 0 && <TabsTrigger value="other">Other</TabsTrigger>}
+          <TabsTrigger value="all">All Habits ({habits.length})</TabsTrigger>
+          {healthHabits.length > 0 && <TabsTrigger value="health">Health ({healthHabits.length})</TabsTrigger>}
+          {productivityHabits.length > 0 && <TabsTrigger value="productivity">Productivity ({productivityHabits.length})</TabsTrigger>}
+          {mindfulnessHabits.length > 0 && <TabsTrigger value="mindfulness">Mindfulness ({mindfulnessHabits.length})</TabsTrigger>}
+          {learningHabits.length > 0 && <TabsTrigger value="learning">Learning ({learningHabits.length})</TabsTrigger>}
+          {socialHabits.length > 0 && <TabsTrigger value="social">Social ({socialHabits.length})</TabsTrigger>}
+          {otherHabits.length > 0 && <TabsTrigger value="other">Other ({otherHabits.length})</TabsTrigger>}
         </TabsList>
         
         <TabsContent value="all">
-          <HabitList habits={habits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={habits} onCompleteHabit={completeHabit} />
         </TabsContent>
         <TabsContent value="health">
-          <HabitList habits={healthHabits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={healthHabits} onCompleteHabit={completeHabit} />
         </TabsContent>
         <TabsContent value="productivity">
-          <HabitList habits={productivityHabits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={productivityHabits} onCompleteHabit={completeHabit} />
         </TabsContent>
         <TabsContent value="mindfulness">
-          <HabitList habits={mindfulnessHabits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={mindfulnessHabits} onCompleteHabit={completeHabit} />
         </TabsContent>
         <TabsContent value="learning">
-          <HabitList habits={learningHabits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={learningHabits} onCompleteHabit={completeHabit} />
         </TabsContent>
         <TabsContent value="social">
-          <HabitList habits={socialHabits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={socialHabits} onCompleteHabit={completeHabit} />
         </TabsContent>
         <TabsContent value="other">
-          <HabitList habits={otherHabits} onCompleteHabit={handleCompleteHabit} />
+          <HabitList habits={otherHabits} onCompleteHabit={completeHabit} />
         </TabsContent>
       </Tabs>
       

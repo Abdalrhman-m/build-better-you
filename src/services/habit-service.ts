@@ -1,6 +1,6 @@
 
-import { apiService } from './api-client';
-import { ApiResponse, PagedResponse } from '@/types/api';
+import { supabase } from '@/integrations/supabase/client';
+import { ApiResponse } from '@/types/api';
 import { 
   Habit, 
   CreateHabitRequest, 
@@ -8,47 +8,235 @@ import {
   CompleteHabitRequest 
 } from '@/types/habit';
 
-const HABIT_ENDPOINTS = {
-  BASE: '/habits',
-  BY_ID: (id: string) => `/habits/${id}`,
-  COMPLETE: (id: string) => `/habits/${id}/complete`,
-  ANALYTICS: '/habits/analytics',
-};
-
 export const habitService = {
   async getHabits(): Promise<ApiResponse<Habit[]>> {
-    return apiService.get<Habit[]>(HABIT_ENDPOINTS.BASE);
-  },
-  
-  async getHabitsPaged(pageNumber: number = 1, pageSize: number = 10): Promise<ApiResponse<PagedResponse<Habit>>> {
-    return apiService.get<PagedResponse<Habit>>(`${HABIT_ENDPOINTS.BASE}?pageNumber=${pageNumber}&pageSize=${pageSize}`);
-  },
-  
-  async getHabitById(id: string): Promise<ApiResponse<Habit>> {
-    return apiService.get<Habit>(HABIT_ENDPOINTS.BY_ID(id));
+    try {
+      const { data, error } = await supabase
+        .from('habits')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching habits:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
+      }
+
+      const habits: Habit[] = data.map(habit => ({
+        id: habit.id,
+        name: habit.name,
+        description: habit.description || '',
+        streak: habit.streak,
+        category: habit.category,
+        completedDates: Array.isArray(habit.completed_dates) 
+          ? habit.completed_dates.map(date => typeof date === 'string' ? date : date.toString())
+          : [],
+        userId: habit.user_id,
+        createdAt: habit.created_at,
+        updatedAt: habit.updated_at
+      }));
+
+      return {
+        isSuccess: true,
+        value: habits
+      };
+    } catch (error) {
+      console.error('Unexpected error fetching habits:', error);
+      return {
+        isSuccess: false,
+        errors: ['Failed to fetch habits']
+      };
+    }
   },
   
   async createHabit(habitData: CreateHabitRequest): Promise<ApiResponse<string>> {
-    return apiService.post<string>(HABIT_ENDPOINTS.BASE, habitData);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        return {
+          isSuccess: false,
+          errors: ['User not authenticated']
+        };
+      }
+
+      const { data, error } = await supabase
+        .from('habits')
+        .insert({
+          name: habitData.name,
+          description: habitData.description,
+          category: habitData.category,
+          user_id: session.session.user.id
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Error creating habit:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
+      }
+
+      return {
+        isSuccess: true,
+        value: data.id
+      };
+    } catch (error) {
+      console.error('Unexpected error creating habit:', error);
+      return {
+        isSuccess: false,
+        errors: ['Failed to create habit']
+      };
+    }
   },
   
   async updateHabit(habitData: UpdateHabitRequest): Promise<ApiResponse<void>> {
-    return apiService.put<void>(HABIT_ENDPOINTS.BY_ID(habitData.id), habitData);
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .update({
+          name: habitData.name,
+          description: habitData.description,
+          category: habitData.category,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', habitData.id);
+
+      if (error) {
+        console.error('Error updating habit:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
+      }
+
+      return {
+        isSuccess: true,
+        value: undefined
+      };
+    } catch (error) {
+      console.error('Unexpected error updating habit:', error);
+      return {
+        isSuccess: false,
+        errors: ['Failed to update habit']
+      };
+    }
   },
   
   async deleteHabit(id: string): Promise<ApiResponse<void>> {
-    return apiService.delete<void>(HABIT_ENDPOINTS.BY_ID(id));
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting habit:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
+      }
+
+      return {
+        isSuccess: true,
+        value: undefined
+      };
+    } catch (error) {
+      console.error('Unexpected error deleting habit:', error);
+      return {
+        isSuccess: false,
+        errors: ['Failed to delete habit']
+      };
+    }
   },
   
   async completeHabit(request: CompleteHabitRequest): Promise<ApiResponse<void>> {
-    return apiService.post<void>(HABIT_ENDPOINTS.COMPLETE(request.id), { completedDate: request.completedDate });
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        return {
+          isSuccess: false,
+          errors: ['User not authenticated']
+        };
+      }
+
+      const { error } = await supabase
+        .from('habit_completions')
+        .insert({
+          habit_id: request.id,
+          user_id: session.session.user.id,
+          completed_date: request.completedDate
+        });
+
+      if (error) {
+        console.error('Error completing habit:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
+      }
+
+      return {
+        isSuccess: true,
+        value: undefined
+      };
+    } catch (error) {
+      console.error('Unexpected error completing habit:', error);
+      return {
+        isSuccess: false,
+        errors: ['Failed to complete habit']
+      };
+    }
   },
-  
-  async getHabitsByCategory(category: string): Promise<ApiResponse<Habit[]>> {
-    return apiService.get<Habit[]>(`${HABIT_ENDPOINTS.BASE}/category/${category}`);
-  },
-  
+
   async getHabitAnalytics(): Promise<ApiResponse<any>> {
-    return apiService.get<any>(HABIT_ENDPOINTS.ANALYTICS);
+    try {
+      const { data: habits, error } = await supabase
+        .from('habits')
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching analytics:', error);
+        return {
+          isSuccess: false,
+          errors: [error.message]
+        };
+      }
+
+      // Calculate analytics from real data
+      const totalHabits = habits.length;
+      const categoryCounts = habits.reduce((acc, habit) => {
+        acc[habit.category] = (acc[habit.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const today = new Date().toISOString().split('T')[0];
+      const completedToday = habits.filter(habit => 
+        habit.completed_dates && habit.completed_dates.includes(today)
+      ).length;
+
+      const weeklyPercentage = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
+
+      return {
+        isSuccess: true,
+        value: {
+          totalHabits,
+          completedToday,
+          weeklyPercentage,
+          categoryCounts,
+          habits
+        }
+      };
+    } catch (error) {
+      console.error('Unexpected error fetching analytics:', error);
+      return {
+        isSuccess: false,
+        errors: ['Failed to fetch analytics']
+      };
+    }
   }
 };
