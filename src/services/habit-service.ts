@@ -215,9 +215,15 @@ export const habitService = {
       }, {} as Record<string, number>);
 
       const today = new Date().toISOString().split('T')[0];
-      const completedToday = habits.filter(habit => 
-        habit.completed_dates && habit.completed_dates.includes(today)
-      ).length;
+      const completedToday = habits.filter(habit => {
+        // Safely check if completed_dates is an array and contains today's date
+        if (Array.isArray(habit.completed_dates)) {
+          return habit.completed_dates.some(date => 
+            typeof date === 'string' && date === today
+          );
+        }
+        return false;
+      }).length;
 
       const weeklyPercentage = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
 
