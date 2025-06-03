@@ -29,7 +29,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        setIsLoading(true);
         console.log('Auth state changed:', event, currentSession);
         
         // Update session state
@@ -90,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Welcome back!",
           description: "You've successfully logged in.",
         });
-        navigate('/dashboard');
+        // Don't navigate here, let the auth state change handle it
         return true;
       } else {
         const errorMessage = response.errors && response.errors.length > 0 
@@ -128,9 +127,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.isSuccess && response.value) {
         toast({
           title: "Account created!",
-          description: "Welcome to Habit Builder. Let's get started!",
+          description: "Welcome to Medovate. Let's get started!",
         });
-        navigate('/dashboard');
+        // Don't navigate here, let the auth state change handle it
         return true;
       } else {
         const errorMessage = response.errors && response.errors.length > 0 

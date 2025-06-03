@@ -4,8 +4,16 @@ import { Logo } from '@/components/ui/logo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, BarChart3, Home } from 'lucide-react';
+import { LogOut, User, BarChart3, Home, Menu } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useState } from 'react';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -15,6 +23,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await logout();
@@ -27,6 +36,11 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     { path: '/profile', icon: User, label: 'Profile' },
   ];
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -35,6 +49,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <div className="flex items-center justify-between">
             <Logo size="md" />
             
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -55,11 +70,54 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              
+              {/* Mobile Menu */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild className="md:hidden">
+                  <Button variant="outline" size="icon">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-72">
+                  <SheetHeader>
+                    <SheetTitle>Navigation</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-4 mt-6">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = location.pathname === item.path;
+                      return (
+                        <Button
+                          key={item.path}
+                          variant={isActive ? "default" : "ghost"}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center gap-2 justify-start"
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                    {user && (
+                      <Button
+                        variant="outline"
+                        onClick={handleSignOut}
+                        className="flex items-center gap-2 justify-start mt-4"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </Button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Desktop Sign Out */}
               {user && (
                 <Button
                   variant="outline"
                   onClick={handleSignOut}
-                  className="flex items-center gap-2"
+                  className="hidden md:flex items-center gap-2"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
