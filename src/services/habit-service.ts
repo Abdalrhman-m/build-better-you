@@ -55,7 +55,7 @@ export const habitService = {
     try {
       const { data, error } = await supabase
         .from('habits')
-        .select('*')
+        .select('*, decrypt_text(name) as decrypted_name, decrypt_text(description) as decrypted_description')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -76,8 +76,8 @@ export const habitService = {
         
         return {
           id: habit.id,
-          name: habit.name,
-          description: habit.description || '',
+          name: habit.decrypted_name || habit.name, // Use decrypted name or fallback
+          description: habit.decrypted_description || habit.description || '', // Use decrypted description or fallback
           streak: calculatedStreak,
           category: habit.category,
           completedDates,
@@ -113,8 +113,8 @@ export const habitService = {
       const { data, error } = await supabase
         .from('habits')
         .insert({
-          name: habitData.name,
-          description: habitData.description,
+          name: await this.encryptText(habitData.name),
+          description: habitData.description ? await this.encryptText(habitData.description) : null,
           category: habitData.category,
           user_id: session.session.user.id
         })
@@ -147,8 +147,8 @@ export const habitService = {
       const { error } = await supabase
         .from('habits')
         .update({
-          name: habitData.name,
-          description: habitData.description,
+          name: await this.encryptText(habitData.name),
+          description: habitData.description ? await this.encryptText(habitData.description) : null,
           category: habitData.category,
           updated_at: new Date().toISOString()
         })
@@ -246,7 +246,7 @@ export const habitService = {
     try {
       const { data: habits, error } = await supabase
         .from('habits')
-        .select('*');
+        .select('*, decrypt_text(name) as decrypted_name');
 
       if (error) {
         console.error('Error fetching analytics:', error);
@@ -283,7 +283,10 @@ export const habitService = {
           completedToday,
           weeklyPercentage,
           categoryCounts,
-          habits
+          habits: habits.map(habit => ({
+            ...habit,
+            name: habit.decrypted_name || habit.name // Use decrypted name for analytics
+          }))
         }
       };
     } catch (error) {
@@ -292,6 +295,24 @@ export const habitService = {
         isSuccess: false,
         errors: ['Failed to fetch analytics']
       };
+    }
+  },
+
+  // Helper method to encrypt text using database function
+  async encryptText(text: string): Promise<string> {
+    try {
+      const { data, error } = await supabase
+        .rpc('encrypt_text', { text_to_encrypt: text });
+
+      if (error) {
+        console.error('Error encrypting text:', error);
+        return text; // Return original text if encryption fails
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Unexpected error encrypting text:', error);
+      return text; // Return original text if encryption fails
     }
   }
 };
