@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types/api';
 import { 
@@ -7,6 +6,49 @@ import {
   UpdateHabitRequest, 
   CompleteHabitRequest 
 } from '@/types/habit';
+
+// Helper function to calculate streak from completion dates
+const calculateStreak = (completedDates: string[]): number => {
+  if (completedDates.length === 0) return 0;
+  
+  // Sort dates in descending order (most recent first)
+  const sortedDates = completedDates
+    .map(date => new Date(date))
+    .sort((a, b) => b.getTime() - a.getTime());
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let streak = 0;
+  let currentDate = new Date(today);
+  
+  // Check if there's a completion for today or yesterday
+  const mostRecentCompletion = sortedDates[0];
+  mostRecentCompletion.setHours(0, 0, 0, 0);
+  
+  // If most recent completion is more than 1 day ago, streak is 0
+  const daysDiff = Math.floor((today.getTime() - mostRecentCompletion.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysDiff > 1) return 0;
+  
+  // Start checking from today or yesterday
+  if (daysDiff === 1) {
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+  
+  // Count consecutive days going backwards
+  for (const completionDate of sortedDates) {
+    completionDate.setHours(0, 0, 0, 0);
+    
+    if (completionDate.getTime() === currentDate.getTime()) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+};
 
 export const habitService = {
   async getHabits(): Promise<ApiResponse<Habit[]>> {
@@ -24,19 +66,26 @@ export const habitService = {
         };
       }
 
-      const habits: Habit[] = data.map(habit => ({
-        id: habit.id,
-        name: habit.name,
-        description: habit.description || '',
-        streak: habit.streak,
-        category: habit.category,
-        completedDates: Array.isArray(habit.completed_dates) 
+      const habits: Habit[] = data.map(habit => {
+        const completedDates = Array.isArray(habit.completed_dates) 
           ? habit.completed_dates.map(date => typeof date === 'string' ? date : date.toString())
-          : [],
-        userId: habit.user_id,
-        createdAt: habit.created_at,
-        updatedAt: habit.updated_at
-      }));
+          : [];
+        
+        // Calculate streak properly
+        const calculatedStreak = calculateStreak(completedDates);
+        
+        return {
+          id: habit.id,
+          name: habit.name,
+          description: habit.description || '',
+          streak: calculatedStreak,
+          category: habit.category,
+          completedDates,
+          userId: habit.user_id,
+          createdAt: habit.created_at,
+          updatedAt: habit.updated_at
+        };
+      });
 
       return {
         isSuccess: true,

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/auth-service';
@@ -26,10 +25,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Initialize auth state from Supabase
   useEffect(() => {
+    let mounted = true;
+    
     // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log('Auth state changed:', event, currentSession);
+        
+        if (!mounted) return;
         
         // Update session state
         setSession(currentSession);
@@ -47,32 +50,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
         }
         
+        // Set loading to false after processing auth state
         setIsLoading(false);
       }
     );
     
     // THEN check for an existing session
     const initializeAuth = async () => {
-      setIsLoading(true);
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session?.user) {
-        const userData: AuthResponse = {
-          token: data.session.access_token,
-          expiresAt: new Date(data.session.expires_at! * 1000).toISOString(),
-          userId: data.session.user.id,
-          userName: data.session.user.email?.split('@')[0] || 'User'
-        };
-        setUser(userData);
-        setSession(data.session);
+      try {
+        const { data } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (data.session?.user) {
+          const userData: AuthResponse = {
+            token: data.session.access_token,
+            expiresAt: new Date(data.session.expires_at! * 1000).toISOString(),
+            userId: data.session.user.id,
+            userName: data.session.user.email?.split('@')[0] || 'User'
+          };
+          setUser(userData);
+          setSession(data.session);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-      
-      setIsLoading(false);
     };
     
     initializeAuth();
     
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
