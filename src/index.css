@@ -5,44 +5,44 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 220 30% 97%;
     --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 100%;
+    --card: 330 25% 96%;
     --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 0 0% 100%;
+    --popover: 330 25% 96%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 196 100% 47%;
+    --primary: 200 65% 75%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 145 63% 49%;
+    --secondary: 330 30% 88%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 220 20% 94%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 50 80% 85%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 330 50% 70%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 196 100% 47%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 200 65% 75%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 100%;
+    --sidebar-background: 220 30% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 196 100% 47%;
+    --sidebar-primary: 200 65% 75%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 330 25% 94%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 196 100% 47%;
+    --sidebar-border: 220 20% 90%;
+    --sidebar-ring: 200 65% 75%;
   }
 
   .dark {
@@ -55,33 +55,33 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 196 100% 47%;
+    --primary: 200 55% 65%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 145 63% 42%;
+    --secondary: 330 25% 78%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 50 70% 75%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 330 40% 60%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 196 100% 40%;
+    --ring: 200 55% 65%;
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 196 100% 47%;
+    --sidebar-primary: 200 55% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 196 100% 47%;
+    --sidebar-ring: 200 55% 65%;
   }
 }
 
@@ -100,19 +100,19 @@
 }
 
 .streak-dot-completed {
-  @apply bg-habit-green scale-110;
+  @apply bg-accent scale-110;
 }
 
 .streak-dot-missed {
-  @apply bg-habit-red;
+  @apply bg-pink-300;
 }
 
 .streak-dot-future {
-  @apply bg-gray-200;
+  @apply bg-blue-100;
 }
 
 .habit-card {
-  @apply border rounded-lg p-4 hover:shadow-md transition-all duration-200;
+  @apply border rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-card;
 }
 
 .progress-ring-circle {
