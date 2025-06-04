@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { habitService } from '@/services/habit-service';
 import { Habit, CreateHabitRequest, UpdateHabitRequest } from '@/types/habit';
@@ -87,15 +86,18 @@ export function useHabits() {
     }
   });
   
-  // Complete habit mutation
+  // Complete habit mutation - updated to support custom dates
   const completeHabit = useMutation({
     mutationFn: ({ id, completedDate }: { id: string, completedDate: string }) => 
       habitService.completeHabit({ id, completedDate }),
     onSuccess: (data, variables) => {
       if (data.isSuccess) {
+        const isToday = variables.completedDate === new Date().toISOString().split('T')[0];
+        const dateDisplay = isToday ? 'today' : new Date(variables.completedDate).toLocaleDateString();
+        
         toast({
-          title: "Habit completed!",
-          description: `You've completed this habit today.`,
+          title: "Habit completed! 🎉",
+          description: `You've completed this habit for ${dateDisplay}. Keep up the great work! ✨`,
         });
         queryClient.invalidateQueries({ queryKey: ['habits'] });
       } else {
@@ -133,9 +135,9 @@ export function useHabits() {
     createHabit: (newHabit: CreateHabitRequest) => createHabit.mutate(newHabit),
     updateHabit: (updatedHabit: UpdateHabitRequest) => updateHabit.mutate(updatedHabit),
     deleteHabit: (id: string) => deleteHabit.mutate(id),
-    completeHabit: (id: string) => {
-      const today = new Date().toISOString().split('T')[0];
-      completeHabit.mutate({ id, completedDate: today });
+    completeHabit: (id: string, date?: string) => {
+      const targetDate = date || new Date().toISOString().split('T')[0];
+      completeHabit.mutate({ id, completedDate: targetDate });
     },
     totalHabits,
     completedToday,
