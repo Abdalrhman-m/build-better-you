@@ -25,6 +25,8 @@ export function useAICoach() {
     setResponse('');
 
     try {
+      console.log('Calling AI Coach with:', { type, params, customPrompt });
+      
       const { data, error } = await supabase.functions.invoke('ai-habit-coach', {
         body: {
           type,
@@ -34,6 +36,8 @@ export function useAICoach() {
           prompt: customPrompt
         }
       });
+
+      console.log('AI Coach response:', data, error);
 
       if (error) {
         throw error;
@@ -48,9 +52,9 @@ export function useAICoach() {
     } catch (error) {
       console.error('AI Coach error:', error);
       toast({
-        title: "AI Coach Unavailable",
-        description: "I'm having trouble connecting right now. Please try again later!",
-        variant: "destructive",
+        title: "AI Coach is thinking...",
+        description: "Your personal habit coach is getting ready! Please try again in a moment.",
+        variant: "default",
       });
       return null;
     } finally {

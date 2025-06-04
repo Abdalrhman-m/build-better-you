@@ -51,7 +51,7 @@ const AICoachModal = ({
       icon: Star,
       description: 'Get help with obstacles',
       color: 'bg-gradient-to-r from-yellow-100 to-yellow-200 border-yellow-300',
-      iconColor: 'text-yellow-500'
+      iconColor: 'text-yellow-600'
     },
     {
       id: 'brainstorming' as AICoachType,
