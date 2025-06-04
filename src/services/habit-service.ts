@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types/api';
 import { 
@@ -55,7 +56,7 @@ export const habitService = {
     try {
       const { data, error } = await supabase
         .from('habits')
-        .select('*, decrypt_text(name) as decrypted_name, decrypt_text(description) as decrypted_description')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -66,7 +67,8 @@ export const habitService = {
         };
       }
 
-      const habits: Habit[] = data.map(habit => {
+      // Decrypt the data after fetching
+      const habits: Habit[] = await Promise.all(data.map(async habit => {
         const completedDates = Array.isArray(habit.completed_dates) 
           ? habit.completed_dates.map(date => typeof date === 'string' ? date : date.toString())
           : [];
@@ -74,10 +76,14 @@ export const habitService = {
         // Calculate streak properly
         const calculatedStreak = calculateStreak(completedDates);
         
+        // Decrypt name and description
+        const decryptedName = await this.decryptText(habit.name);
+        const decryptedDescription = habit.description ? await this.decryptText(habit.description) : '';
+        
         return {
           id: habit.id,
-          name: habit.decrypted_name || habit.name, // Use decrypted name or fallback
-          description: habit.decrypted_description || habit.description || '', // Use decrypted description or fallback
+          name: decryptedName,
+          description: decryptedDescription,
           streak: calculatedStreak,
           category: habit.category,
           completedDates,
@@ -85,7 +91,7 @@ export const habitService = {
           createdAt: habit.created_at,
           updatedAt: habit.updated_at
         };
-      });
+      }));
 
       return {
         isSuccess: true,
@@ -110,11 +116,15 @@ export const habitService = {
         };
       }
 
+      // Encrypt the name and description before storing
+      const encryptedName = await this.encryptText(habitData.name);
+      const encryptedDescription = habitData.description ? await this.encryptText(habitData.description) : null;
+
       const { data, error } = await supabase
         .from('habits')
         .insert({
-          name: await this.encryptText(habitData.name),
-          description: habitData.description ? await this.encryptText(habitData.description) : null,
+          name: encryptedName,
+          description: encryptedDescription,
           category: habitData.category,
           user_id: session.session.user.id
         })
@@ -144,11 +154,15 @@ export const habitService = {
   
   async updateHabit(habitData: UpdateHabitRequest): Promise<ApiResponse<void>> {
     try {
+      // Encrypt the name and description before updating
+      const encryptedName = await this.encryptText(habitData.name);
+      const encryptedDescription = habitData.description ? await this.encryptText(habitData.description) : null;
+
       const { error } = await supabase
         .from('habits')
         .update({
-          name: await this.encryptText(habitData.name),
-          description: habitData.description ? await this.encryptText(habitData.description) : null,
+          name: encryptedName,
+          description: encryptedDescription,
           category: habitData.category,
           updated_at: new Date().toISOString()
         })
@@ -246,7 +260,7 @@ export const habitService = {
     try {
       const { data: habits, error } = await supabase
         .from('habits')
-        .select('*, decrypt_text(name) as decrypted_name');
+        .select('*');
 
       if (error) {
         console.error('Error fetching analytics:', error);
@@ -256,15 +270,24 @@ export const habitService = {
         };
       }
 
+      // Decrypt habit names for analytics
+      const decryptedHabits = await Promise.all(habits.map(async habit => {
+        const decryptedName = await this.decryptText(habit.name);
+        return {
+          ...habit,
+          name: decryptedName
+        };
+      }));
+
       // Calculate analytics from real data
-      const totalHabits = habits.length;
-      const categoryCounts = habits.reduce((acc, habit) => {
+      const totalHabits = decryptedHabits.length;
+      const categoryCounts = decryptedHabits.reduce((acc, habit) => {
         acc[habit.category] = (acc[habit.category] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
       const today = new Date().toISOString().split('T')[0];
-      const completedToday = habits.filter(habit => {
+      const completedToday = decryptedHabits.filter(habit => {
         // Safely check if completed_dates is an array and contains today's date
         if (Array.isArray(habit.completed_dates)) {
           return habit.completed_dates.some(date => 
@@ -283,10 +306,7 @@ export const habitService = {
           completedToday,
           weeklyPercentage,
           categoryCounts,
-          habits: habits.map(habit => ({
-            ...habit,
-            name: habit.decrypted_name || habit.name // Use decrypted name for analytics
-          }))
+          habits: decryptedHabits
         }
       };
     } catch (error) {
@@ -313,6 +333,24 @@ export const habitService = {
     } catch (error) {
       console.error('Unexpected error encrypting text:', error);
       return text; // Return original text if encryption fails
+    }
+  },
+
+  // Helper method to decrypt text using database function
+  async decryptText(encryptedText: string): Promise<string> {
+    try {
+      const { data, error } = await supabase
+        .rpc('decrypt_text', { encrypted_text: encryptedText });
+
+      if (error) {
+        console.error('Error decrypting text:', error);
+        return encryptedText; // Return original text if decryption fails
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Unexpected error decrypting text:', error);
+      return encryptedText; // Return original text if decryption fails
     }
   }
 };
