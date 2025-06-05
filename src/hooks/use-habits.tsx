@@ -110,6 +110,27 @@ export function useHabits() {
       }
     }
   });
+
+  // Uncomplete habit mutation
+  const uncompleteHabit = useMutation({
+    mutationFn: ({ id, completedDate }: { id: string, completedDate: string }) => 
+      habitService.uncompleteHabit({ id, completedDate }),
+    onSuccess: (data) => {
+      if (data.isSuccess) {
+        toast({
+          title: "Habit unmarked",
+          description: "Your habit has been unmarked as completed.",
+        });
+        queryClient.invalidateQueries({ queryKey: ['habits'] });
+      } else {
+        toast({
+          title: "Failed to unmark habit",
+          description: data.errors?.[0] || "An error occurred while unmarking your habit.",
+          variant: "destructive",
+        });
+      }
+    }
+  });
   
   // Extract habits from response
   const habits = habitsResponse?.value || [];
@@ -139,6 +160,10 @@ export function useHabits() {
     completeHabit: (id: string, date?: string) => {
       const targetDate = date || new Date().toISOString().split('T')[0];
       completeHabit.mutate({ id, completedDate: targetDate });
+    },
+    uncompleteHabit: (id: string, date?: string) => {
+      const targetDate = date || new Date().toISOString().split('T')[0];
+      uncompleteHabit.mutate({ id, completedDate: targetDate });
     },
     totalHabits,
     completedToday,

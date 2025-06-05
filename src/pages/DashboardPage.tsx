@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import HabitList from '@/components/habits/HabitList';
@@ -17,6 +18,8 @@ const DashboardPage = () => {
     isLoading,
     createHabit,
     completeHabit,
+    uncompleteHabit,
+    deleteHabit,
     totalHabits,
     completedToday,
     currentStreak
@@ -100,25 +103,67 @@ const DashboardPage = () => {
             </TabsList>
             
             <TabsContent value="all">
-              <HabitList habits={habits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={habits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
             <TabsContent value="health">
-              <HabitList habits={healthHabits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={healthHabits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
             <TabsContent value="productivity">
-              <HabitList habits={productivityHabits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={productivityHabits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
             <TabsContent value="mindfulness">
-              <HabitList habits={mindfulnessHabits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={mindfulnessHabits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
             <TabsContent value="learning">
-              <HabitList habits={learningHabits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={learningHabits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
             <TabsContent value="social">
-              <HabitList habits={socialHabits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={socialHabits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
             <TabsContent value="other">
-              <HabitList habits={otherHabits} onCompleteHabit={completeHabit} selectedDate={selectedDate} />
+              <HabitList 
+                habits={otherHabits} 
+                onCompleteHabit={completeHabit} 
+                onUncompleteHabit={uncompleteHabit}
+                onDeleteHabit={deleteHabit}
+                selectedDate={selectedDate} 
+              />
             </TabsContent>
           </Tabs>
         </div>

@@ -6,10 +6,12 @@ import { Habit } from '@/types/habit';
 interface HabitListProps {
   habits: Habit[];
   onCompleteHabit: (id: string, date?: string) => void;
+  onUncompleteHabit: (id: string, date?: string) => void;
+  onDeleteHabit: (id: string) => void;
   selectedDate?: string | null;
 }
 
-const HabitList = ({ habits, onCompleteHabit, selectedDate }: HabitListProps) => {
+const HabitList = ({ habits, onCompleteHabit, onUncompleteHabit, onDeleteHabit, selectedDate }: HabitListProps) => {
   if (habits.length === 0) {
     return (
       <div className="text-center py-10">
@@ -24,7 +26,9 @@ const HabitList = ({ habits, onCompleteHabit, selectedDate }: HabitListProps) =>
         <HabitCard 
           key={habit.id} 
           habit={habit} 
-          onComplete={onCompleteHabit} 
+          onComplete={onCompleteHabit}
+          onUncomplete={onUncompleteHabit}
+          onDelete={onDeleteHabit}
           selectedDate={selectedDate}
         />
       ))}
