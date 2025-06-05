@@ -85,6 +85,13 @@ export function useHabits() {
           variant: "destructive",
         });
       }
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to delete habit",
+        description: "An unexpected error occurred while deleting your habit.",
+        variant: "destructive",
+      });
     }
   });
   
@@ -108,6 +115,13 @@ export function useHabits() {
           variant: "destructive",
         });
       }
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to complete habit",
+        description: "An unexpected error occurred while completing your habit.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -129,6 +143,13 @@ export function useHabits() {
           variant: "destructive",
         });
       }
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to unmark habit",
+        description: "An unexpected error occurred while unmarking your habit.",
+        variant: "destructive",
+      });
     }
   });
   

@@ -14,6 +14,22 @@ export const habitCompletionService = {
         };
       }
 
+      // Check if the habit completion already exists
+      const { data: existingCompletion } = await supabase
+        .from('habit_completions')
+        .select('id')
+        .eq('habit_id', request.id)
+        .eq('user_id', session.session.user.id)
+        .eq('completed_date', request.completedDate)
+        .single();
+
+      if (existingCompletion) {
+        return {
+          isSuccess: false,
+          errors: ['Habit already completed for this date']
+        };
+      }
+
       const { error } = await supabase
         .from('habit_completions')
         .insert({
