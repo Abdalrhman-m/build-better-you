@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Star, Flame, Calendar, Heart, Sparkles } from 'lucide-react';
+import { Check, Star, Flame, Calendar, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Habit } from '@/types/habit';
 
@@ -21,68 +21,72 @@ const HabitCard = ({ habit, onComplete, selectedDate }: HabitCardProps) => {
   
   const getCategoryColor = (category: string) => {
     const colors = {
-      health: 'border-l-pastel-pink-400 bg-gradient-to-br from-pastel-pink-50 via-white to-pastel-pink-100',
-      productivity: 'border-l-pastel-blue-400 bg-gradient-to-br from-pastel-blue-50 via-white to-pastel-blue-100',
-      mindfulness: 'border-l-pastel-yellow-400 bg-gradient-to-br from-pastel-yellow-50 via-white to-pastel-yellow-100',
-      learning: 'border-l-pastel-pink-300 bg-gradient-to-br from-pastel-pink-50 via-pastel-yellow-50 to-pastel-blue-50',
-      social: 'border-l-pastel-blue-300 bg-gradient-to-br from-pastel-blue-50 via-white to-pastel-pink-50',
+      health: 'border-l-pink-300 bg-gradient-to-br from-pink-50 via-white to-pink-50/50',
+      productivity: 'border-l-blue-300 bg-gradient-to-br from-blue-50 via-white to-blue-50/50',
+      mindfulness: 'border-l-yellow-300 bg-gradient-to-br from-yellow-50 via-white to-yellow-50/50',
+      learning: 'border-l-pink-200 bg-gradient-to-br from-pink-25 via-yellow-25 to-blue-25',
+      social: 'border-l-blue-200 bg-gradient-to-br from-blue-50 via-white to-pink-50/30',
     };
-    return colors[category as keyof typeof colors] || 'border-l-pastel-blue-400 bg-gradient-to-br from-pastel-blue-50 via-white to-pastel-blue-100';
+    return colors[category as keyof typeof colors] || 'border-l-blue-300 bg-gradient-to-br from-blue-50 via-white to-blue-50/50';
   };
   
   return (
     <Card className={cn(
-      "p-6 relative overflow-hidden transition-all duration-300 border-l-4 hover:shadow-xl border-2",
+      "p-6 relative overflow-hidden transition-all duration-500 border-l-4 hover:shadow-2xl border border-gray-100",
       getCategoryColor(habit.category),
       isCompletedForDate 
-        ? "opacity-95 bg-gradient-to-br from-pastel-yellow-100 via-pastel-pink-100 to-pastel-blue-100 border-pastel-yellow-300 shadow-lg" 
-        : "hover:scale-[1.02] border-pastel-pink-200 shadow-md hover:border-pastel-pink-300"
+        ? "bg-gradient-to-br from-yellow-50/80 via-pink-50/50 to-blue-50/80 border-l-yellow-400 shadow-xl backdrop-blur-sm" 
+        : "hover:scale-[1.01] hover:border-l-4 shadow-lg backdrop-blur-sm"
     )}>
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-6">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-bold text-lg text-gray-800">{habit.name}</h3>
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="font-semibold text-xl text-gray-800 tracking-tight">{habit.name}</h3>
             {isCompletedForDate && (
-              <div className="bg-gradient-to-r from-pastel-yellow-300 to-pastel-pink-300 px-3 py-1 rounded-full border-2 border-pastel-yellow-400 shadow-sm">
-                <Check className="h-4 w-4 text-white animate-bounce" />
+              <div className="bg-gradient-to-r from-yellow-200/80 to-pink-200/80 px-4 py-1.5 rounded-full border border-yellow-300/50 shadow-sm backdrop-blur-sm">
+                <Check className="h-4 w-4 text-yellow-700" />
               </div>
             )}
             {isHistoricalDate && (
-              <div className="bg-pastel-blue-200 px-2 py-1 rounded-full border border-pastel-blue-300">
-                <Calendar className="h-3 w-3 text-pastel-blue-700" />
+              <div className="bg-blue-100/80 px-3 py-1 rounded-full border border-blue-200/50 backdrop-blur-sm">
+                <Calendar className="h-3 w-3 text-blue-600" />
               </div>
             )}
           </div>
-          <p className="text-sm text-muted-foreground mb-3">{habit.description}</p>
+          <p className="text-sm text-gray-600 mb-4 leading-relaxed">{habit.description}</p>
           
           {isHistoricalDate && (
-            <p className="text-xs text-pastel-blue-600 mb-2 font-medium">
-              📅 Viewing: {new Date(selectedDate).toLocaleDateString()}
+            <p className="text-xs text-blue-600 mb-3 font-medium bg-blue-50/50 px-3 py-1 rounded-full inline-block">
+              📅 {new Date(selectedDate).toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+              })}
             </p>
           )}
           
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
+          <div className="flex items-center gap-6 text-xs text-gray-500">
+            <span className="flex items-center gap-2">
               <Calendar className="h-3 w-3" />
               {habit.completedDates.length} completions
             </span>
-            <span className="capitalize bg-white/80 px-3 py-1 rounded-full border border-pastel-blue-200 text-pastel-blue-700 font-medium">
+            <span className="capitalize bg-white/70 px-3 py-1.5 rounded-full border border-gray-200/50 text-gray-600 font-medium backdrop-blur-sm">
               {habit.category}
             </span>
           </div>
         </div>
         
         {habit.streak > 0 && (
-          <div className="flex items-center bg-gradient-to-r from-pastel-yellow-200 to-pastel-pink-200 px-3 py-2 rounded-full border-2 border-pastel-yellow-300 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-105">
-            <Flame className="h-4 w-4 text-pastel-yellow-600 mr-1 animate-pulse" />
-            <span className="text-sm font-bold text-pastel-yellow-700">{habit.streak}</span>
-            <Sparkles className="h-3 w-3 text-pastel-pink-600 ml-1" />
+          <div className="flex items-center bg-gradient-to-r from-yellow-100/80 to-pink-100/80 px-4 py-2.5 rounded-full border border-yellow-200/50 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 backdrop-blur-sm">
+            <Crown className="h-4 w-4 text-yellow-600 mr-2" />
+            <span className="text-sm font-semibold text-yellow-700">{habit.streak}</span>
+            <Flame className="h-3 w-3 text-pink-500 ml-2" />
           </div>
         )}
       </div>
       
       <div className="flex justify-between items-center">
-        <div className="flex space-x-1">
+        <div className="flex space-x-2">
           {Array.from({ length: 7 }).map((_, i) => {
             const date = new Date();
             date.setDate(date.getDate() - (6 - i));
@@ -95,13 +99,13 @@ const HabitCard = ({ habit, onComplete, selectedDate }: HabitCardProps) => {
               <div 
                 key={i} 
                 className={cn(
-                  "w-4 h-4 rounded-full transition-all duration-200 border-2",
+                  "w-3 h-3 rounded-full transition-all duration-300 border",
                   isCompleted 
-                    ? "bg-gradient-to-br from-pastel-yellow-400 to-pastel-pink-400 scale-110 shadow-md border-pastel-yellow-500" 
+                    ? "bg-gradient-to-br from-yellow-300 to-pink-300 scale-110 shadow-sm border-yellow-400/50" 
                     : isToday 
-                      ? "bg-pastel-blue-200 ring-2 ring-pastel-blue-400 border-pastel-blue-300" 
-                      : "bg-pastel-pink-100 border-pastel-pink-200",
-                  isSelected && "ring-4 ring-pastel-pink-400 ring-opacity-40 scale-125"
+                      ? "bg-blue-200/70 ring-2 ring-blue-300/50 border-blue-300/50" 
+                      : "bg-gray-100 border-gray-200",
+                  isSelected && "ring-2 ring-pink-300/50 scale-125"
                 )} 
                 title={dateStr}
               />
@@ -113,40 +117,33 @@ const HabitCard = ({ habit, onComplete, selectedDate }: HabitCardProps) => {
           variant={isCompletedForDate ? "outline" : "default"}
           size="sm"
           className={cn(
-            "transition-all duration-200 font-semibold",
+            "transition-all duration-300 font-medium shadow-md hover:shadow-lg",
             isCompletedForDate 
-              ? "border-2 border-pastel-yellow-400 text-pastel-yellow-700 hover:bg-pastel-yellow-50 bg-white/80 shadow-md" 
-              : "bg-gradient-to-r from-pastel-blue-400 via-pastel-pink-400 to-pastel-yellow-400 hover:from-pastel-blue-500 hover:via-pastel-pink-500 hover:to-pastel-yellow-500 text-white shadow-lg hover:shadow-xl hover:scale-105 border-2 border-white/50"
+              ? "border border-yellow-300/50 text-yellow-700 hover:bg-yellow-50/50 bg-white/80 backdrop-blur-sm" 
+              : "bg-gradient-to-r from-blue-300/80 via-pink-300/80 to-yellow-300/80 hover:from-blue-400/90 hover:via-pink-400/90 hover:to-yellow-400/90 text-white hover:scale-105 border-none backdrop-blur-sm"
           )}
           onClick={() => onComplete(habit.id, selectedDate || undefined)}
           disabled={false}
         >
-          <div className="flex items-center gap-1">
-            <Check className={cn("h-4 w-4", isCompletedForDate && "animate-spin")} />
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4" />
             {isCompletedForDate 
-              ? (isHistoricalDate ? "Completed ✨" : "Done Today!") 
+              ? (isHistoricalDate ? "Completed" : "Done Today") 
               : (isHistoricalDate ? "Mark Complete" : "Complete")
             }
-            {!isCompletedForDate && <Star className="h-3 w-3 animate-pulse" />}
+            {!isCompletedForDate && <Star className="h-3 w-3" />}
           </div>
         </Button>
       </div>
       
       {isCompletedForDate && (
-        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pastel-yellow-400/30 via-pastel-pink-400/20 to-transparent rounded-bl-full">
-          <Star className="absolute top-3 right-3 h-5 w-5 text-pastel-yellow-500 animate-pulse" />
-          <Heart className="absolute top-6 right-6 h-3 w-3 text-pastel-pink-500 animate-pulse" />
+        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-yellow-200/20 via-pink-200/10 to-transparent rounded-bl-full">
+          <Star className="absolute top-3 right-3 h-4 w-4 text-yellow-400" />
         </div>
       )}
       
-      {/* Playful decorative elements */}
-      <div className="absolute bottom-2 left-2 opacity-20">
-        <div className="flex gap-1">
-          <div className="w-2 h-2 bg-pastel-pink-300 rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-pastel-yellow-300 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-          <div className="w-2 h-2 bg-pastel-blue-300 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
-      </div>
+      {/* Subtle decorative accent */}
+      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-pink-200/30 to-transparent"></div>
     </Card>
   );
 };
