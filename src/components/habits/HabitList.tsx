@@ -5,10 +5,11 @@ import { Habit } from '@/types/habit';
 
 interface HabitListProps {
   habits: Habit[];
-  onCompleteHabit: (id: string) => void;
+  onCompleteHabit: (id: string, date?: string) => void;
+  selectedDate?: string | null;
 }
 
-const HabitList = ({ habits, onCompleteHabit }: HabitListProps) => {
+const HabitList = ({ habits, onCompleteHabit, selectedDate }: HabitListProps) => {
   if (habits.length === 0) {
     return (
       <div className="text-center py-10">
@@ -24,6 +25,7 @@ const HabitList = ({ habits, onCompleteHabit }: HabitListProps) => {
           key={habit.id} 
           habit={habit} 
           onComplete={onCompleteHabit} 
+          selectedDate={selectedDate}
         />
       ))}
     </div>
