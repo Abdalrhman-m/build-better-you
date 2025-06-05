@@ -1,7 +1,9 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { habitService } from '@/services/habit-service';
 import { Habit, CreateHabitRequest, UpdateHabitRequest } from '@/types/habit';
 import { useToast } from '@/hooks/use-toast';
+import { getRandomCompletionMessage } from '@/utils/completion-messages';
 
 export function useHabits() {
   const queryClient = useQueryClient();
@@ -86,18 +88,17 @@ export function useHabits() {
     }
   });
   
-  // Complete habit mutation - updated to support custom dates
+  // Complete habit mutation - updated with personalized messages
   const completeHabit = useMutation({
     mutationFn: ({ id, completedDate }: { id: string, completedDate: string }) => 
       habitService.completeHabit({ id, completedDate }),
     onSuccess: (data, variables) => {
       if (data.isSuccess) {
-        const isToday = variables.completedDate === new Date().toISOString().split('T')[0];
-        const dateDisplay = isToday ? 'today' : new Date(variables.completedDate).toLocaleDateString();
+        const personalizedMessage = getRandomCompletionMessage();
         
         toast({
-          title: "Habit completed! 🎉",
-          description: `You've completed this habit for ${dateDisplay}. Keep up the great work! ✨`,
+          title: "Habit Completed! 🎉",
+          description: personalizedMessage,
         });
         queryClient.invalidateQueries({ queryKey: ['habits'] });
       } else {
